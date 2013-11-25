@@ -1,19 +1,24 @@
 #!/bin/bash
+# NotifyMe.sh
+# initially prowl.sh by grantlucas (https://github.com/grantlucas/sh-prowl)
+# MIT Licensed
 
 usage()
 {
   echo "
-Usage: prowl.sh (-vr) [-s Subject] [-a Application] (-p Priority {-2 => 2})  message
-Try 'prowl.sh -h' for more information."
+Usage: notifyme.sh (-vr) [-s Subject] [-a Application] (-p Priority {-2 => 2})  message
+Try 'notifyme.sh -h' for more information."
   exit 1
 }
 
 help()
 {
   echo "
-Usage: prowl.sh (-vr) [-s Subject] [-a Application] (-p Priority {-2 => 2})  message
+Usage: notifyme.sh (-vr) [-s Subject] [-a Application] (-p Priority {-2 => 2})  message
 
 Options:
+  -S SERVICE (Required) {prowl, nma}
+    The required service (prowl or nma)
   -s SUBJECT (Required)
     The subject line of the message that is being sent
   -a APPLICATION (Required)
@@ -23,28 +28,21 @@ Options:
   -v
     Displays a success or failure message after receiving response using XPath if XPath is available
   -r
-    Displays the raw XML output response from Prowl
+    Displays the raw XML output response from the API
   -h
     Shows this help text"
   exit 1
 }
 
-#set the API key from the environment variable
-if [ ! -z $PROWL_APIKEY ]; then
-  API_KEY=$PROWL_APIKEY
-else
-  echo "Prowl API Key not set as an environment variable. Add \"export PROWL_APIKEY={key}\" to your .bash_profile or .profile"
-  exit 1
-fi
-
-#Set defaults
+# Set defaults
 verbose=0
 raw=0
 PRIORITY=0
 
 # process options
-while getopts s:a:p:vrh o
+while getopts S:s:a:p:vrh o
 do  case "$o" in
+  S) SERVICE=$OPTARG;;
   s) SUBJECT=$OPTARG;;
   a) APPLICATION=$OPTARG;;
   p) PRIORITY=$OPTARG;;
@@ -57,17 +55,46 @@ done
 # shift the option values out
 shift $(($OPTIND - 1))
 
-#use everything but the options as the message to send
+# use everything but the options as the message to send
 MESSAGE=$*
 
-#Ensure subject is supplied as it's required
+# set the API key from the environment variable
+if [ "$SERVICE" == "prowl" ]; then
+  if [ ! -z $PROWL_APIKEY ]; then
+    API_KEY=$PROWL_APIKEY
+    API_URL="https://api.prowlapp.com/publicapi/add"
+  else
+    echo "Prowl API Key not set as an environment variable. Add \"export PROWL_APIKEY={key}\" to your .bash_profile or .profile"
+    exit 1
+  fi
+elif [ "$SERVICE" == "nma" ]; then
+  if [ ! -z $NMA_APIKEY ]; then
+    API_KEY=$NMA_APIKEY
+    API_URL="https://www.notifymyandroid.com/publicapi/notify"
+  else
+    echo "NotifyMyAndroid API Key not set as an environment variable. Add \"export NMA_APIKEY={key}\" to your .bash_profile or .profile"
+    exit 1
+  fi
+else
+  echo "This service ($SERVICE) isn't supported!"
+  exit 1
+fi
+
+# check service
+if [ -z "$SERVICE" ]; then
+  echo "Service is required. Use \"-S\" to set it. (prowl or nma)"
+  usage
+  exit 1
+fi
+
+# Ensure subject is supplied as it's required
 if [ -z "$SUBJECT" ]; then
   echo "Subject is required. Use \"-s\" to set it."
   usage
   exit 1
 fi
 
-#Ensure app is supplied as it's required
+# Ensure app is supplied as it's required
 if [ -z "$APPLICATION" ]; then
   echo "Application is required. Use \"-a\" to set it."
   usage
@@ -86,7 +113,7 @@ if [ "$PRIORITY" -gt "2" ]; then
   exit 1
 fi
 
-#Ensure that a message was provided after argument parsing
+# Ensure that a message was provided after argument parsing
 if [ -z "$MESSAGE" ]; then
   echo "No message was provided to send."
   usage
@@ -94,7 +121,7 @@ if [ -z "$MESSAGE" ]; then
 fi
 
 # Send off the message to prowl
-call=`curl -s -d "apikey=$API_KEY&priority=$PRIORITY&application=$APPLICATION&event=$SUBJECT&description=$MESSAGE" https://api.prowlapp.com/publicapi/add`
+call=`curl -s -d "apikey=$API_KEY&priority=$PRIORITY&application=$APPLICATION&event=$SUBJECT&description=$MESSAGE" $API_URL`
 
 # Display raw output for debugging
 if [ "$raw" == "1" ]; then
