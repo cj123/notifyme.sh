@@ -1,14 +1,15 @@
-# sh-prowl
+# notifyme-sh
 
-A simple shell tool to interact with [Prowl](http://www.prowlapp.com/) using cURL and, if desired, sed to return information after the request is submitted.
+A simple shell tool to interact with [Prowl](http://www.prowlapp.com/) or [NotifyMyAndroid](https://www.notifymyandroid.com) using cURL and, if desired, sed to return information after the request is submitted.
 
 ## Installation
 
-To install sh-prowl on any Unix system, just clone this repository or download the .sh file to your system. Either create an alias to the file in your .profile or expose the script to your $PATH.
+To install notifyme-sh on any Unix system, just clone this repository or download the .sh file to your system. Either create an alias to the file in your .profile or expose the script to your $PATH.
 
-A Prowl API Key is needed to work with this script and can be retrieved after signing up on the [API Settings Page](https://www.prowlapp.com/api_settings.php). In order for the script to see your API key, add a PROWL_APIKEY variable to your environment in your .bash_profile or .profile file using
+A Prowl API Key is needed to work with this script and can be retrieved after signing up on the [Prowl API Settings Page](https://www.prowlapp.com/api_settings.php) or [NotifyMyAndroid API Settings Page](https://www.notifymyandroid.com/account.jsp). In order for the script to see your API key, add a `PROWL_APIKEY` variable for prowl, or a `NMA_APIKEY` variable for NotifyMyAndroid to your environment in your .bash_profile or .profile file using
 
     export PROWL_APIKEY="key"
+    export NMA_APIKEY="key"
 
 If the script does not find the API key variable, the script will abort and you will be prompted to resolve the issue.
 
@@ -16,6 +17,8 @@ If the script does not find the API key variable, the script will abort and you 
 
 ### Required
 
+- S (Service)
+  - either `prowl` or `nma`
 - a (Application)
   - This option sets which application the message is coming from like a torrent application or even another shell script.
   - If there are multiple words, they must be wrapped in quotes
@@ -40,11 +43,11 @@ If the script does not find the API key variable, the script will abort and you 
 
 ## Example Input
 
-    ./prowl.sh -s Subject -a Application The rest of the string is the main message
+    ./notifyme.sh -S prowl -s Subject -a Application The rest of the string is the main message
 
-    ./prowl.sh -s Subject -a Application -p 2 "This is a very high priority message"
+    ./notifyme.sh -S prowl -s Subject -a Application -p 2 "This is a very high priority message"
 
-    ./prowl.sh -s "Sample Subject" -a "Sample Application" "This example uses quotes to better segment off which strings belong to which section"
+    ./notifyme.sh -S nma -s "Sample Subject" -a "Sample Application" "This example uses quotes to better segment off which strings belong to which section"
 
 ## Output
 
